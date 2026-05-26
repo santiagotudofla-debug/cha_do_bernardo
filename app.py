@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
+import os
 import urllib.parse
-from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(page_title="Chá de Bebê - Confirmação", layout="wide", page_icon="🍼")
 
@@ -25,8 +25,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+DATA_FILE = "rsvp_cascata_pix.csv"
+MIMOS_FILE = "mimos_comprados.csv"
+
 LIMITES_FRALDAS = {"RN": 20, "P": 40, "M": 40, "G": 30}
 VALORES_PIX = {"RN": 40.00, "P": 45.00, "M": 50.00, "G": 60.00, "PIX Solidário (R$ 50)": 50.00}
+
 CHAVE_PIX = "11963766575"
 
 @st.cache_data
@@ -67,6 +71,7 @@ def gerar_catalogo_50_mimos():
         texto_img = urllib.parse.quote_plus(nome[:20])
         img_url = f"https://placehold.co/400x300/fdf0f3/d6336c.png?text={texto_img}"
         termo_busca = urllib.parse.quote_plus(nome + " bebe")
+        # Links para os principais comparadores/marketplaces brasileiros
         busca_buscape   = f"https://www.buscape.com.br/busca?q={urllib.parse.quote_plus(nome)}"
         busca_google    = f"https://www.google.com.br/search?q={termo_busca}&tbm=shop"
         busca_mercadolivre = f"https://lista.mercadolivre.com.br/{urllib.parse.quote_plus(nome)}"
@@ -79,6 +84,7 @@ def gerar_catalogo_50_mimos():
         })
     return catalogo
 
+# CORREÇÃO: era gerar_catalogo_49_mimos() — nome inconsistente com a função definida acima
 CATALOGO_MIMOS = gerar_catalogo_50_mimos()
 
 def calcular_crc16(payload):
@@ -108,47 +114,31 @@ def gerar_payload_pix(chave, valor, nome="Cha do Bernardo", cidade="Cotia"):
     payload += calcular_crc16(payload)
     return payload
 
-# ============================================================
-# CONEXÃO COM O GOOGLE SHEETS
-# ============================================================
-conn = st.connection("gsheets", type=GSheetsConnection)
-
-def ler_rsvp():
-    try:
-        return conn.read(worksheet="RSVP", ttl=0).dropna(how="all")
-    except:
-        return pd.DataFrame()
-
-def ler_mimos():
-    try:
-        return conn.read(worksheet="Mimos", ttl=0).dropna(how="all")
-    except:
-        return pd.DataFrame()
+def inicializar_bancos():
+    if not os.path.exists(DATA_FILE): pd.DataFrame(columns=["Nome Titular", "Sexo Titular", "Fralda Titular", "Formato Titular", "Valor PIX Titular", "Leva Acompanhante", "Nome Acompanhante", "Sexo Acompanhante", "Fralda Acompanhante", "Formato Acompanhante", "Valor PIX Acompanhante", "Qtd Filhos", "Mensagem"]).to_csv(DATA_FILE, index=False)
+    if not os.path.exists(MIMOS_FILE): pd.DataFrame(columns=["Nome Convidado", "ID Item", "Item", "Formato", "Valor"]).to_csv(MIMOS_FILE, index=False)
 
 def salvar_confirmacao_rsvp(dados_dict):
-    df = ler_rsvp()
+    df = pd.read_csv(DATA_FILE)
     nova_entrada = pd.DataFrame([dados_dict])
-    df_atualizado = pd.concat([df, nova_entrada], ignore_index=True)
-    conn.update(worksheet="RSVP", data=df_atualizado)
+    df = pd.concat([df, nova_entrada], ignore_index=True)
+    df.to_csv(DATA_FILE, index=False)
 
 def salvar_mimo(nome, id_item, nome_item, formato, valor):
-    df = ler_mimos()
+    df = pd.read_csv(MIMOS_FILE)
     nova_linha = pd.DataFrame([{"Nome Convidado": nome, "ID Item": id_item, "Item": nome_item, "Formato": formato, "Valor": valor}])
-    df_atualizado = pd.concat([df, nova_linha], ignore_index=True)
-    conn.update(worksheet="Mimos", data=df_atualizado)
+    df = pd.concat([df, nova_linha], ignore_index=True)
+    df.to_csv(MIMOS_FILE, index=False)
 
 def checar_disponibilidade_fraldas(tamanho):
-    df = ler_rsvp()
-    if df.empty or "Fralda Titular" not in df.columns: return 0
-    titular_count = (df["Fralda Titular"] == tamanho).sum() if "Fralda Titular" in df.columns else 0
-    acomp_count = (df["Fralda Acompanhante"] == tamanho).sum() if "Fralda Acompanhante" in df.columns else 0
-    return titular_count + acomp_count
+    df = pd.read_csv(DATA_FILE)
+    if df.empty: return 0
+    return (df["Fralda Titular"] == tamanho).sum() + (df["Fralda Acompanhante"] == tamanho).sum()
 
 def checar_fisicos_comprados(id_item):
-    df = ler_mimos()
-    if df.empty or "ID Item" not in df.columns: return 0
+    df = pd.read_csv(MIMOS_FILE)
+    if df.empty: return 0
     return ((df["ID Item"] == id_item) & (df["Formato"] == "Física")).sum()
-# ============================================================
 
 def gerar_opcoes_fralda(sexo):
     opcoes = []
@@ -183,6 +173,7 @@ def exibir_bloco_presente(nome_referencia, sexo, sufixo_key):
     return fralda_escolhida, formato, valor_pix
 
 def main():
+    inicializar_bancos()
     st.markdown("<h2 style='text-align: center; color: #5a5a5a;'>🍼 Confirmação e Lista de Presentes</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #d6336c; font-size: 22px; font-weight: bold;'>🍯Prepare os potes de mel porque o Chá de Bebê do Bernardo está chegando!🍯</p>", unsafe_allow_html=True)
 
@@ -248,7 +239,8 @@ def main():
             info_mimo = next(m for m in CATALOGO_MIMOS if m["nome"] == mimo_selecionado)
             st.success(f"Ótima escolha! **{info_mimo['nome']}** - R$ {info_mimo['valor']:.2f}")
             st.markdown(
-                f"""🔎 **Compare preços antes de comprar:** &nbsp;&nbsp;[🔴 Buscapé]({info_mimo['link_buscape']})&nbsp;&nbsp;|&nbsp;&nbsp;
+                f"""🔎 **Compare preços antes de comprar:**  
+&nbsp;&nbsp;[🔴 Buscapé]({info_mimo['link_buscape']})&nbsp;&nbsp;|&nbsp;&nbsp;
 [🔵 Google Shopping]({info_mimo['link_google']})&nbsp;&nbsp;|&nbsp;&nbsp;
 [🟡 Mercado Livre]({info_mimo['link_mercadolivre']})""",
                 unsafe_allow_html=False
@@ -275,26 +267,23 @@ def main():
         elif quer_mimo == "Sim, quero escolher um mimo!" and not mimo_escolhido:
             st.error("Você marcou que deseja dar um mimo. Por favor, selecione-o na lista acima.")
         else:
-            with st.spinner("Salvando as informações..."):
-                dados_rsvp = {
-                    "Nome Titular": nome_titular.strip(), "Sexo Titular": sexo_titular, "Fralda Titular": fralda_t,
-                    "Formato Titular": formato_t, "Valor PIX Titular": valor_t, "Leva Acompanhante": leva_acompanhante,
-                    "Nome Acompanhante": nome_acomp.strip() if leva_acompanhante == "Sim" else "-",
-                    "Sexo Acompanhante": sexo_acomp if leva_acompanhante == "Sim" else "-",
-                    "Fralda Acompanhante": fralda_a if leva_acompanhante == "Sim" else "-",
-                    "Formato Acompanhante": formato_a if leva_acompanhante == "Sim" else "-",
-                    "Valor PIX Acompanhante": valor_a if leva_acompanhante == "Sim" else 0.0,
-                    "Qtd Filhos": int(qtd_filhos), "Mensagem": mensagem
-                }
-                salvar_confirmacao_rsvp(dados_rsvp)
-                
-                if mimo_escolhido:
-                    salvar_mimo(nome_titular, mimo_escolhido["id"], mimo_escolhido["nome"], formato_mimo, valor_mimo)
+            dados_rsvp = {
+                "Nome Titular": nome_titular.strip(), "Sexo Titular": sexo_titular, "Fralda Titular": fralda_t,
+                "Formato Titular": formato_t, "Valor PIX Titular": valor_t, "Leva Acompanhante": leva_acompanhante,
+                "Nome Acompanhante": nome_acomp.strip() if leva_acompanhante == "Sim" else "-",
+                "Sexo Acompanhante": sexo_acomp if leva_acompanhante == "Sim" else "-",
+                "Fralda Acompanhante": fralda_a if leva_acompanhante == "Sim" else "-",
+                "Formato Acompanhante": formato_a if leva_acompanhante == "Sim" else "-",
+                "Valor PIX Acompanhante": valor_a if leva_acompanhante == "Sim" else 0.0,
+                "Qtd Filhos": int(qtd_filhos), "Mensagem": mensagem
+            }
+            salvar_confirmacao_rsvp(dados_rsvp)
+            if mimo_escolhido:
+                salvar_mimo(nome_titular, mimo_escolhido["id"], mimo_escolhido["nome"], formato_mimo, valor_mimo)
 
             total_pix = valor_t + valor_a + valor_mimo
             st.balloons()
             st.success(f"Presença confirmada com sucesso! Muito obrigado, {nome_titular}. ❤️")
-            
             st.markdown("### 📋 Seu Resumo:")
             st.write(f"- Fralda ({nome_titular}): {fralda_t} - {formato_t} (R$ {valor_t:.2f})")
             if leva_acompanhante == "Sim":
