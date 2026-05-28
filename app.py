@@ -705,7 +705,7 @@ def main():
                 formato_mimo, valor_mimo = "Física", 0.0
 
     # ── SEÇÃO 4: CONFIRMAR ───────────────────────────────────
-     st.markdown("""
+    st.markdown("""
     <div class="section-card" style="margin-top:24px;">
         <div class="section-header">
             <div class="section-icon">🚀</div>
