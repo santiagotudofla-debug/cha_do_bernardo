@@ -557,7 +557,7 @@ def main():
     """, unsafe_allow_html=True)
 
     # ── SEÇÃO 1: DADOS PESSOAIS ──────────────────────────────
-   st.markdown("""
+  st.markdown("""
     <div class="section-card chamada-card">
         <div class="chamada-conteudo">
             <div class="chamada-emoji">🍯</div>
