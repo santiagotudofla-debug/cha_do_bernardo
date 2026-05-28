@@ -557,7 +557,7 @@ def main():
     """, unsafe_allow_html=True)
 
     # ── SEÇÃO 1: DADOS PESSOAIS ──────────────────────────────
-  st.markdown("""
+    st.markdown("""
     <div class="section-card chamada-card">
         <div class="chamada-conteudo">
             <div class="chamada-emoji">🍯</div>
@@ -569,6 +569,14 @@ def main():
             <div class="chamada-emoji">🍯</div>
         </div>
         <p class="chamada-sub">Preencha seus dados abaixo e confirme sua presença — mal podemos esperar para te ver! 💛</p>
+        <hr style="border:none;border-top:1px solid #ddeaf8;margin:20px 0 24px 0;">
+        <div class="section-header" style="margin-bottom:0;padding-bottom:0;border-bottom:none;">
+            <div class="section-icon">👤</div>
+            <div>
+                <p class="section-title">Seus dados</p>
+                <p class="section-subtitle">Conte-nos um pouquinho sobre você</p>
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
