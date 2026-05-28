@@ -5,7 +5,7 @@ from datetime import datetime
 from supabase import create_client
 
 # ============================================================
-# 1. SUPABASE — conexão via Secrets
+# 1. SUPABASE
 # ============================================================
 @st.cache_resource
 def get_supabase():
@@ -14,91 +14,386 @@ def get_supabase():
     return create_client(url, key)
 
 # ============================================================
-# 2. CONFIGURAÇÕES GLOBAIS
+# 2. PAGE CONFIG + CSS PREMIUM
 # ============================================================
-st.set_page_config(page_title="Chá de Bebê - Bernardo", layout="wide", page_icon="🍼")
+st.set_page_config(page_title="Chá de Bebê · Bernardo", layout="wide", page_icon="👶")
 
 st.markdown("""
-    <style>
-    div.stButton > button { background-color: #fca3b7; color: white; border-radius: 20px; border: none; font-weight: bold; width: 100%; transition: all 0.3s; padding: 12px; font-size: 16px;}
-    div.stButton > button:hover { background-color: #ff859f; color: white; }
-    div.stAlert { background-color: #e6f3ff; border-radius: 10px; border-left: 5px solid #87ceeb; color: #00529B; }
-    .vitrine-card { background-color: #ffffff; border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s ease; margin-bottom: 20px; border: 1px solid #f0f0f0; }
-    .vitrine-card:hover { transform: translateY(-8px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-    .vitrine-img-container { position: relative; border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
-    .vitrine-img-container img { width: 100%; height: auto; display: block; }
-    .vitrine-titulo { font-size: 16px; font-weight: 800; color: #444; margin: 0 0 5px 0; line-height: 1.2; }
-    .secao-titulo { color: #d6336c; margin-top: 30px; margin-bottom: 15px; font-weight: 800; border-bottom: 2px solid #fca3b7; padding-bottom: 5px;}
-    .preco-botoes { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
-    .preco-btn { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; text-decoration: none !important; color: white !important; }
-    .btn-buscape  { background: #e8401c; }
-    .btn-google   { background: #4285F4; }
-    .btn-ml       { background: #FFE600; color: #333 !important; }
-    .vitrine-preco { font-size: 15px; font-weight: 800; color: #d6336c; margin: 4px 0; }
-    </style>
+<style>
+/* ── Reset & Fonte ── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+
+/* ── Fundo geral ── */
+.stApp {
+    background: linear-gradient(135deg, #f0f6ff 0%, #e8f2ff 50%, #fffbe6 100%);
+}
+
+/* ── Esconde toolbar e menu padrão do Streamlit ── */
+#MainMenu, footer, header { visibility: hidden; }
+.block-container { padding-top: 0 !important; max-width: 1100px; }
+
+/* ── HERO BANNER ── */
+.hero {
+    background: linear-gradient(135deg, #1a73e8 0%, #1558b0 40%, #0d3d7a 100%);
+    border-radius: 24px;
+    padding: 60px 40px;
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(26,115,232,0.30);
+}
+.hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: white;
+    padding: 6px 18px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+.hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 6vw, 64px);
+    color: white;
+    margin: 0 0 12px 0;
+    line-height: 1.1;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.1);
+}
+.hero-sub {
+    font-size: 18px;
+    color: rgba(255,255,255,0.88);
+    font-weight: 300;
+    margin: 0 0 30px 0;
+    letter-spacing: 0.5px;
+}
+.hero-data {
+    display: inline-flex;
+    gap: 32px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 16px;
+    padding: 16px 32px;
+    backdrop-filter: blur(10px);
+}
+.hero-data-item { color: white; text-align: center; }
+.hero-data-item .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.7; }
+.hero-data-item .value { font-size: 16px; font-weight: 600; margin-top: 2px; }
+
+/* ── STEPS (etapas) ── */
+.steps-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin: 0 0 40px 0;
+}
+.step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.step-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    color: #aaa;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+}
+.step-num.active { background: linear-gradient(135deg,#1a73e8,#0d3d7a); color: white; box-shadow: 0 4px 14px rgba(26,115,232,0.4); }
+.step-label { font-size: 13px; font-weight: 500; color: #aaa; }
+.step-label.active { color: #1a73e8; font-weight: 600; }
+.step-line { width: 60px; height: 2px; background: #f0f0f0; margin: 0 8px; }
+.step-line.done { background: linear-gradient(90deg,#1a73e8,#f5c400); }
+
+/* ── CARD DE SEÇÃO ── */
+.section-card {
+    background: white;
+    border-radius: 20px;
+    padding: 36px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+    border: 1px solid rgba(26,115,232,0.08);
+}
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ddeaf8;
+}
+.section-icon {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg,#ddeaf8,#b8d4f5);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+}
+.section-title { font-family: 'Playfair Display', serif; font-size: 22px; color: #2d2d2d; margin: 0; }
+.section-subtitle { font-size: 13px; color: #999; margin: 2px 0 0 0; }
+
+/* ── INPUTS ── */
+div[data-testid="stTextInput"] input,
+div[data-testid="stSelectbox"] > div > div {
+    border-radius: 12px !important;
+    border: 1.5px solid #c8ddf5 !important;
+    background: #f8fbff !important;
+    font-family: 'Inter', sans-serif !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+div[data-testid="stTextInput"] input:focus {
+    border-color: #1a73e8 !important;
+    box-shadow: 0 0 0 3px rgba(26,115,232,0.12) !important;
+}
+div[data-testid="stTextArea"] textarea {
+    border-radius: 12px !important;
+    border: 1.5px solid #c8ddf5 !important;
+    background: #f8fbff !important;
+}
+
+/* ── RADIO ── */
+div[data-testid="stRadio"] label {
+    background: #fafafa;
+    border: 1.5px solid #efefef;
+    border-radius: 10px;
+    padding: 8px 16px;
+    margin-right: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+div[data-testid="stRadio"] label:has(input:checked) {
+    background: linear-gradient(135deg,#ddeaf8,#b8d4f5);
+    border-color: #1a73e8;
+    color: #0d3d7a;
+    font-weight: 600;
+}
+
+/* ── BOTÃO PRINCIPAL ── */
+div.stButton > button {
+    background: linear-gradient(135deg, #f5c400 0%, #e6b000 100%) !important;
+    color: #0d3d7a !important;
+    border: none !important;
+    border-radius: 14px !important;
+    padding: 16px 40px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    font-family: 'Inter', sans-serif !important;
+    letter-spacing: 0.3px !important;
+    width: 100% !important;
+    transition: all 0.3s !important;
+    box-shadow: 0 8px 24px rgba(245,196,0,0.40) !important;
+}
+div.stButton > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 32px rgba(245,196,0,0.55) !important;
+}
+div.stButton > button:active { transform: translateY(0) !important; }
+
+/* ── VITRINE CARDS ── */
+.mimo-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1.5px solid #ddeaf8;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    height: 100%;
+}
+.mimo-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(26,115,232,0.15);
+    border-color: #1a73e8;
+}
+.mimo-card-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+.mimo-card-body { padding: 14px; }
+.mimo-card-cat {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #1a73e8; margin-bottom: 4px;
+}
+.mimo-card-name { font-size: 14px; font-weight: 700; color: #2d2d2d; margin: 0 0 4px 0; line-height: 1.3; }
+.mimo-card-desc { font-size: 11px; color: #999; margin: 0 0 10px 0; line-height: 1.4; }
+.mimo-card-price { font-size: 18px; font-weight: 800; color: #1a73e8; margin: 0 0 10px 0; }
+.mimo-card-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.mimo-btn {
+    display: inline-block; padding: 4px 9px; border-radius: 8px;
+    font-size: 10px; font-weight: 700; text-decoration: none !important;
+    color: white !important; letter-spacing: 0.3px;
+}
+.mimo-btn-b { background: #e8401c; }
+.mimo-btn-g { background: #4285F4; }
+.mimo-btn-m { background: #f0bf00; color: #333 !important; }
+
+/* ── RESUMO / PIX CARD ── */
+.resumo-card {
+    background: linear-gradient(135deg,#f0f6ff,#e8f2ff);
+    border: 1.5px solid #c5dff7;
+    border-radius: 20px;
+    padding: 28px;
+    margin-top: 24px;
+}
+.resumo-linha {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px dashed #c5dff7; font-size: 15px;
+}
+.resumo-linha:last-child { border-bottom: none; }
+.resumo-total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 0 0 0; font-size: 20px; font-weight: 800; color: #1a73e8;
+}
+
+.pix-card {
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    text-align: center;
+    border: 1.5px solid #c5dff7;
+    box-shadow: 0 8px 32px rgba(26,115,232,0.08);
+}
+.pix-card h3 { font-family: 'Playfair Display',serif; color: #2d2d2d; font-size: 22px; margin-bottom: 8px; }
+.pix-card p { color: #888; font-size: 14px; margin-bottom: 24px; }
+
+/* ── INFO BOX ── */
+.info-box {
+    background: linear-gradient(135deg,#e8f4fd,#ddeffa);
+    border-left: 4px solid #4a90d9;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 14px;
+    color: #1a5276;
+    margin: 16px 0;
+}
+.warn-box {
+    background: linear-gradient(135deg,#fef9e7,#fdf2cc);
+    border-left: 4px solid #f0c030;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 14px;
+    color: #7d6608;
+    margin: 16px 0;
+}
+.success-box {
+    background: linear-gradient(135deg,#e6f4ea,#c8ecd0);
+    border-left: 4px solid #27ae60;
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 14px;
+    color: #0d3d7a;
+    margin: 16px 0;
+}
+
+/* ── LABEL DE CAMPO ── */
+div[data-testid="stTextInput"] label,
+div[data-testid="stSelectbox"] label,
+div[data-testid="stTextArea"] label,
+div[data-testid="stNumberInput"] label,
+div[data-testid="stRadio"] label[data-testid="stWidgetLabel"] {
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    color: #555 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    margin-bottom: 4px !important;
+}
+
+/* ── DIVIDER ── */
+hr { border: none; border-top: 1px solid #f0e0ea; margin: 28px 0; }
+
+/* ── NUMBER INPUT ── */
+div[data-testid="stNumberInput"] input {
+    border-radius: 12px !important;
+    border: 1.5px solid #c8ddf5 !important;
+}
+</style>
 """, unsafe_allow_html=True)
 
 # ============================================================
 # 3. REGRAS DE NEGÓCIO
 # ============================================================
 LIMITES_FRALDAS = {"RN": 20, "P": 40, "M": 40, "G": 30}
-VALORES_PIX     = {"RN": 40.00, "P": 45.00, "M": 50.00, "G": 50.00, "PIX Solidário (R$ 50)": 50.00}
+VALORES_PIX     = {"RN": 40.00, "P": 45.00, "M": 50.00, "G": 60.00, "PIX Solidário (R$ 50)": 50.00}
 CHAVE_PIX       = "11963766575"
 
 # ============================================================
 # 4. CATÁLOGO DE MIMOS
 # ============================================================
 @st.cache_data
-def gerar_catalogo_50_mimos():
-    dados_brutos = [
-        ("Lenços Umedecidos (Leve 4)",   "Higiene",       39.90,  "Shopee",         "Kit de lenços para pele sensível sem perfume."),
-        ("Pomada Antiassaduras",          "Higiene",       25.50,  "Natura",         "Proteção prolongada com vitaminas e óleos."),
-        ("Kit Cotonetes Infantis",        "Higiene",       15.00,  "Mercado Livre",  "Hastes flexíveis com ponta de segurança."),
-        ("Sabonete Líquido RN",           "Higiene",       32.90,  "Natura",         "Da cabeça aos pés, não arde os olhos."),
-        ("Álcool 70% e Algodão",          "Higiene",       22.00,  "Amazon",         "Para a higiene do coto umbilical do bebê."),
-        ("Banheira Ergonômica",           "Banho",         89.90,  "Amazon",         "Banheira com apoio de segurança anatômico."),
-        ("Toalha com Capuz",              "Banho",         55.00,  "Elo7",           "Toalha 100% algodão super absorvente."),
-        ("Termômetro de Banho",           "Banho",         28.50,  "Shopee",         "Mede a temperatura da água no formato de bichinho."),
-        ("Esponja Natural Soft",          "Banho",         19.90,  "Amazon",         "Esponja extra macia para recém-nascidos."),
-        ("Naninha de Ovelha",             "Naninhas",      49.90,  "Elo7",           "Paninho de apego macio com pelúcia."),
-        ("Chupeta RN Calmante",           "Naninhas",      35.00,  "Amazon",         "Chupeta de silicone inteiriça ortodôntica."),
-        ("Manta Leve Algodão",            "Naninhas",      60.00,  "Mercado Livre",  "Ideal para dias de meia-estação."),
-        ("Ninho Redutor de Berço",        "Naninhas",     130.00,  "Elo7",           "Simula o útero materno para um sono tranquilo."),
-        ("Kit 3 Bodys Manga Longa",       "Roupinhas",     79.90,  "Amazon",         "Cores neutras, 100% algodão suedine."),
-        ("Kit Mijões (Culote)",           "Roupinhas",     55.00,  "Shopee",         "Calças com pezinho reversível super práticas."),
-        ("Macacão Plush",                 "Roupinhas",     89.00,  "Magazine Luiza", "Macacão quentinho para noites frias."),
-        ("Luvinhas e Touca",              "Roupinhas",     35.00,  "Shopee",         "Evita que o bebê se arranhe nos primeiros dias."),
-        ("Móbile de Berço Musical",       "Brinquedos",   145.00,  "Amazon",         "Estimula a visão e acalma com cantigas."),
-        ("Chocalho Macio",                "Brinquedos",    32.00,  "Shopee",         "Barulhinho suave e formato fácil de segurar."),
-        ("Mordedor de Silicone",          "Brinquedos",    28.90,  "Natura",         "Alivia o desconforto das gengivas."),
-        ("Livrinho de Pano",              "Brinquedos",    45.00,  "Amazon",         "Livro sensorial que pode ir na boca e na água."),
-        ("Kit 2 Mamadeiras Anticólica",   "Alimentação",  120.00,  "Amazon",         "Sistema de ventilação para reduzir gases."),
-        ("Escova para Mamadeira",         "Alimentação",   25.00,  "Shopee",         "Alcança os cantos difíceis das garrafinhas."),
-        ("Potes Armazenamento Leite",     "Alimentação",   65.00,  "Amazon",         "Recipientes com tampa hermética e medição."),
-        ("Trocador Portátil de Bolsa",    "Organização",   55.00,  "Elo7",           "Impermeável, fecha como uma bolsinha."),
-        ("Mochila Maternidade",           "Organização",  250.00,  "Amazon",         "Múltiplos compartimentos e bolso térmico."),
-        ("Kit Cabides Infantis",          "Organização",   35.00,  "Shopee",         "Tamanho ideal para as roupinhas pequenas."),
-        ("Quadro Porta-Maternidade",      "Personalizados",120.00, "Elo7",           "Bordado à mão com o nome do Bernardo."),
-        ("Álbum do Bebê (Primeiro Ano)",  "Personalizados", 89.90, "Amazon",         "Para preencher as conquistas de cada mês.")
+def gerar_catalogo():
+    dados = [
+        ("Lenços Umedecidos (Leve 4)",   "Higiene",        39.90,  "Kit de lenços para pele sensível sem perfume."),
+        ("Pomada Antiassaduras",          "Higiene",        25.50,  "Proteção prolongada com vitaminas e óleos."),
+        ("Kit Cotonetes Infantis",        "Higiene",        15.00,  "Hastes flexíveis com ponta de segurança."),
+        ("Sabonete Líquido RN",           "Higiene",        32.90,  "Da cabeça aos pés, não arde os olhos."),
+        ("Álcool 70% e Algodão",          "Higiene",        22.00,  "Para a higiene do coto umbilical do bebê."),
+        ("Banheira Ergonômica",           "Banho",          89.90,  "Banheira com apoio de segurança anatômico."),
+        ("Toalha com Capuz",              "Banho",          55.00,  "Toalha 100% algodão super absorvente."),
+        ("Termômetro de Banho",           "Banho",          28.50,  "Mede a temperatura da água no formato de bichinho."),
+        ("Esponja Natural Soft",          "Banho",          19.90,  "Esponja extra macia para recém-nascidos."),
+        ("Naninha de Ovelha",             "Naninhas",       49.90,  "Paninho de apego macio com pelúcia."),
+        ("Chupeta RN Calmante",           "Naninhas",       35.00,  "Chupeta de silicone inteiriça ortodôntica."),
+        ("Manta Leve Algodão",            "Naninhas",       60.00,  "Ideal para dias de meia-estação."),
+        ("Ninho Redutor de Berço",        "Naninhas",      130.00,  "Simula o útero materno para um sono tranquilo."),
+        ("Kit 3 Bodys Manga Longa",       "Roupinhas",      79.90,  "Cores neutras, 100% algodão suedine."),
+        ("Kit Mijões (Culote)",           "Roupinhas",      55.00,  "Calças com pezinho reversível super práticas."),
+        ("Macacão Plush",                 "Roupinhas",      89.00,  "Macacão quentinho para noites frias."),
+        ("Luvinhas e Touca",              "Roupinhas",      35.00,  "Evita que o bebê se arranhe nos primeiros dias."),
+        ("Móbile de Berço Musical",       "Brinquedos",    145.00,  "Estimula a visão e acalma com cantigas."),
+        ("Chocalho Macio",                "Brinquedos",     32.00,  "Barulhinho suave e formato fácil de segurar."),
+        ("Mordedor de Silicone",          "Brinquedos",     28.90,  "Alivia o desconforto das gengivas."),
+        ("Livrinho de Pano",              "Brinquedos",     45.00,  "Livro sensorial que pode ir na boca e na água."),
+        ("Kit 2 Mamadeiras Anticólica",   "Alimentação",   120.00,  "Sistema de ventilação para reduzir gases."),
+        ("Escova para Mamadeira",         "Alimentação",    25.00,  "Alcança os cantos difíceis das garrafinhas."),
+        ("Potes Armazenamento Leite",     "Alimentação",    65.00,  "Recipientes com tampa hermética e medição."),
+        ("Trocador Portátil de Bolsa",    "Organização",    55.00,  "Impermeável, fecha como uma bolsinha."),
+        ("Mochila Maternidade",           "Organização",   250.00,  "Múltiplos compartimentos e bolso térmico."),
+        ("Kit Cabides Infantis",          "Organização",    35.00,  "Tamanho ideal para as roupinhas pequenas."),
+        ("Quadro Porta-Maternidade",      "Personalizados",120.00,  "Bordado à mão com o nome do Bernardo."),
+        ("Álbum do Bebê (Primeiro Ano)",  "Personalizados", 89.90,  "Para preencher as conquistas de cada mês.")
     ]
+    # Ícone por categoria
+    icones = {"Higiene":"🧴","Banho":"🛁","Naninhas":"🧸","Roupinhas":"👕",
+              "Brinquedos":"🎾","Alimentação":"🍼","Organização":"🎒","Personalizados":"🎨"}
+    cat_cores = {
+        "Higiene":"e3f2fd/0d47a1","Banho":"e8f5e9/1b5e20","Naninhas":"fff8e1/e65100",
+        "Roupinhas":"e8eaf6/283593","Brinquedos":"f3e5f5/4a148c","Alimentação":"e0f7fa/006064",
+        "Organização":"fff9c4/f57f17","Personalizados":"e8f5e9/1b5e20"
+    }
     catalogo = []
-    for i, (nome, cat, valor, loja, desc) in enumerate(dados_brutos, 1):
-        texto_img  = urllib.parse.quote_plus(nome[:20])
-        img_url    = f"https://placehold.co/400x300/fdf0f3/d6336c.png?text={texto_img}"
-        termo      = urllib.parse.quote_plus(nome + " bebe")
+    for i, (nome, cat, valor, desc) in enumerate(dados, 1):
+        cor = cat_cores.get(cat, "f5f5f5/333333")
+        icone = icones.get(cat, "🎁")
+        texto_img = urllib.parse.quote_plus(f"{icone} {nome[:18]}")
+        img_url   = f"https://placehold.co/400x300/{cor}.png?text={texto_img}"
+        termo     = urllib.parse.quote_plus(nome + " bebe")
         catalogo.append({
             "id": i, "nome": nome, "categoria": cat, "valor": valor,
-            "desc": desc, "img": img_url, "limite_fisico": 2,
-            "link_buscape":       f"https://www.buscape.com.br/busca?q={urllib.parse.quote_plus(nome)}",
-            "link_google":        f"https://www.google.com.br/search?q={termo}&tbm=shop",
-            "link_mercadolivre":  f"https://lista.mercadolivre.com.br/{urllib.parse.quote_plus(nome)}",
+            "desc": desc, "img": img_url, "limite_fisico": 2, "icone": icone,
+            "link_buscape":      f"https://www.buscape.com.br/busca?q={urllib.parse.quote_plus(nome)}",
+            "link_google":       f"https://www.google.com.br/search?q={termo}&tbm=shop",
+            "link_mercadolivre": f"https://lista.mercadolivre.com.br/{urllib.parse.quote_plus(nome)}",
         })
     return catalogo
 
-CATALOGO_MIMOS = gerar_catalogo_50_mimos()
+CATALOGO_MIMOS = gerar_catalogo()
 
 # ============================================================
-# 5. GERADOR DE QR CODE PIX (ALGORITMO BCB)
+# 5. PIX
 # ============================================================
 def calcular_crc16(payload):
     crc = 0xFFFF
@@ -112,288 +407,310 @@ def calcular_crc16(payload):
 
 def gerar_payload_pix(chave, valor, nome="Cha do Bernardo", cidade="Cotia"):
     if len(chave) == 11 and chave.isdigit(): chave = f"+55{chave}"
-    payload  = "000201"
-    acc_info = f"0014br.gov.bcb.pix01{len(chave):02d}{chave}"
-    payload += f"26{len(acc_info):02d}{acc_info}"
-    payload += "52040000"
-    payload += "5303986"
+    payload   = "000201"
+    acc_info  = f"0014br.gov.bcb.pix01{len(chave):02d}{chave}"
+    payload  += f"26{len(acc_info):02d}{acc_info}"
+    payload  += "52040000"; payload += "5303986"
     valor_str = f"{valor:.2f}"
-    payload += f"54{len(valor_str):02d}{valor_str}"
-    payload += "5802BR"
-    payload += f"59{len(nome):02d}{nome}"
-    payload += f"60{len(cidade):02d}{cidade}"
-    payload += "62070503***"
-    payload += "6304"
-    payload += calcular_crc16(payload)
+    payload  += f"54{len(valor_str):02d}{valor_str}"
+    payload  += "5802BR"
+    payload  += f"59{len(nome):02d}{nome}"
+    payload  += f"60{len(cidade):02d}{cidade}"
+    payload  += "62070503***"; payload += "6304"
+    payload  += calcular_crc16(payload)
     return payload
 
 # ============================================================
-# 6. FUNÇÕES DE BANCO DE DADOS — SUPABASE
-#
-#  Tabela esperada no Supabase (SQL para criar):
-#
-#  create table rsvp (
-#    id                              bigserial primary key,
-#    nome_titular                    text,
-#    sexo_titular                    text,
-#    fralda_titular                  text,
-#    formato_fralda_titular          text,
-#    valor_pix_fralda_titular        numeric,
-#    leva_acompanhante               text,
-#    nome_acompanhante               text,
-#    sexo_acompanhante               text,
-#    fralda_acompanhante             text,
-#    formato_fralda_acompanhante     text,
-#    valor_pix_fralda_acompanhante   numeric,
-#    qtd_criancas                    int,
-#    mimo_escolhido                  text,
-#    categoria_mimo                  text,
-#    formato_mimo                    text,
-#    valor_pix_mimo                  numeric,
-#    total_pix                       numeric,
-#    mensagem                        text,
-#    data_confirmacao                timestamptz default now()
-#  );
+# 6. SUPABASE — LEITURA E ESCRITA
 # ============================================================
-
-def salvar_tudo_supabase(dados_rsvp: dict, mimo: dict | None, formato_mimo: str, valor_mimo: float):
-    """Insere uma linha unificada (RSVP + mimo) na tabela 'rsvp' do Supabase."""
-    supabase = get_supabase()
-
-    val_titular    = dados_rsvp.get("Valor PIX Fralda Titular (R$)", 0.0)
-    val_acomp      = dados_rsvp.get("Valor PIX Fralda Acompanhante (R$)", 0.0)
-    val_mimo_final = valor_mimo if formato_mimo == "PIX" else 0.0
-    total_pix      = round(val_titular + val_acomp + val_mimo_final, 2)
-
-    linha = {
-        # ── Titular ───────────────────────────────────────────
-        "nome_titular":                  dados_rsvp.get("Nome Titular", ""),
-        "sexo_titular":                  dados_rsvp.get("Sexo Titular", ""),
-        "fralda_titular":                dados_rsvp.get("Fralda Titular", ""),
-        "formato_fralda_titular":        dados_rsvp.get("Formato Fralda Titular", ""),
-        "valor_pix_fralda_titular":      val_titular,
-        # ── Acompanhante ──────────────────────────────────────
-        "leva_acompanhante":             dados_rsvp.get("Leva Acompanhante", "Não"),
-        "nome_acompanhante":             dados_rsvp.get("Nome Acompanhante", "-"),
-        "sexo_acompanhante":             dados_rsvp.get("Sexo Acompanhante", "-"),
-        "fralda_acompanhante":           dados_rsvp.get("Fralda Acompanhante", "-"),
-        "formato_fralda_acompanhante":   dados_rsvp.get("Formato Fralda Acompanhante", "-"),
-        "valor_pix_fralda_acompanhante": val_acomp,
-        # ── Crianças ──────────────────────────────────────────
-        "qtd_criancas":                  dados_rsvp.get("Qtd Crianças", 0),
-        # ── Mimo ──────────────────────────────────────────────
-        "mimo_escolhido":  mimo["nome"]      if mimo else "Sem mimo",
-        "categoria_mimo":  mimo["categoria"] if mimo else "-",
-        "formato_mimo":    formato_mimo      if mimo else "-",
-        "valor_pix_mimo":  val_mimo_final,
-        # ── Totais / Controle ─────────────────────────────────
-        "total_pix":       total_pix,
-        "mensagem":        dados_rsvp.get("Mensagem", ""),
-        # data_confirmacao é preenchida automaticamente pelo default now() do Supabase
+def salvar_tudo_supabase(dados_rsvp, mimo, formato_mimo, valor_mimo):
+    val_t  = dados_rsvp.get("Valor PIX Fralda Titular (R$)", 0.0)
+    val_a  = dados_rsvp.get("Valor PIX Fralda Acompanhante (R$)", 0.0)
+    val_m  = valor_mimo if formato_mimo == "PIX" else 0.0
+    total  = round(val_t + val_a + val_m, 2)
+    linha  = {
+        "nome_titular":                  dados_rsvp.get("Nome Titular",""),
+        "sexo_titular":                  dados_rsvp.get("Sexo Titular",""),
+        "fralda_titular":                dados_rsvp.get("Fralda Titular",""),
+        "formato_fralda_titular":        dados_rsvp.get("Formato Fralda Titular",""),
+        "valor_pix_fralda_titular":      val_t,
+        "leva_acompanhante":             dados_rsvp.get("Leva Acompanhante","Não"),
+        "nome_acompanhante":             dados_rsvp.get("Nome Acompanhante","-"),
+        "sexo_acompanhante":             dados_rsvp.get("Sexo Acompanhante","-"),
+        "fralda_acompanhante":           dados_rsvp.get("Fralda Acompanhante","-"),
+        "formato_fralda_acompanhante":   dados_rsvp.get("Formato Fralda Acompanhante","-"),
+        "valor_pix_fralda_acompanhante": val_a,
+        "qtd_criancas":                  dados_rsvp.get("Qtd Crianças",0),
+        "mimo_escolhido":   mimo["nome"]      if mimo else "Sem mimo",
+        "categoria_mimo":   mimo["categoria"] if mimo else "-",
+        "formato_mimo":     formato_mimo      if mimo else "-",
+        "valor_pix_mimo":   val_m,
+        "total_pix":        total,
+        "mensagem":         dados_rsvp.get("Mensagem",""),
     }
-
     try:
         get_supabase().table("rsvp").insert(linha).execute()
     except Exception as e:
-        st.error(f"Erro ao salvar no banco de dados: {e}")
+        st.markdown(f'<div class="warn-box">⚠️ Erro ao salvar: {e}</div>', unsafe_allow_html=True)
         raise
 
-
-@st.cache_data(ttl=30)   # cache de 30 s para não sobrecarregar o Supabase
-def checar_disponibilidade_fraldas(tamanho: str) -> int:
-    """Conta quantas vezes um tamanho de fralda já foi confirmado."""
+@st.cache_data(ttl=30)
+def checar_disponibilidade_fraldas(tamanho):
     try:
-        supabase = get_supabase()
-        r_titular = (
-            supabase.table("rsvp")
-            .select("id", count="exact")
-            .eq("fralda_titular", tamanho)
-            .execute()
-        )
-        r_acomp = (
-            supabase.table("rsvp")
-            .select("id", count="exact")
-            .eq("fralda_acompanhante", tamanho)
-            .execute()
-        )
-        return (r_titular.count or 0) + (r_acomp.count or 0)
+        sb = get_supabase()
+        rt = sb.table("rsvp").select("id", count="exact").eq("fralda_titular", tamanho).execute()
+        ra = sb.table("rsvp").select("id", count="exact").eq("fralda_acompanhante", tamanho).execute()
+        return (rt.count or 0) + (ra.count or 0)
     except Exception:
         return 0
 
-
 @st.cache_data(ttl=30)
-def checar_fisicos_comprados(nome_item: str) -> int:
-    """Conta quantas entregas físicas de um mimo já foram confirmadas."""
+def checar_fisicos_comprados(nome_item):
     try:
-        r = (
-            get_supabase().table("rsvp")
-            .select("id", count="exact")
-            .eq("mimo_escolhido", nome_item)
-            .eq("formato_mimo", "Física")
-            .execute()
-        )
+        r = get_supabase().table("rsvp").select("id", count="exact").eq("mimo_escolhido", nome_item).eq("formato_mimo", "Física").execute()
         return r.count or 0
     except Exception:
         return 0
 
 # ============================================================
-# 7. LÓGICA DE FRALDAS E FORMULÁRIO
+# 7. LÓGICA DE FRALDAS
 # ============================================================
 def gerar_opcoes_fralda(sexo):
     opcoes = []
     if "Mulher" in sexo:
-        if checar_disponibilidade_fraldas("RN") < LIMITES_FRALDAS["RN"]:
-            opcoes.append("RN")
-        if checar_disponibilidade_fraldas("P") < LIMITES_FRALDAS["P"]:
-            opcoes.append("P")
-        if not opcoes:
-            opcoes.append("PIX Solidário (R$ 50)")
+        if checar_disponibilidade_fraldas("RN") < LIMITES_FRALDAS["RN"]: opcoes.append("RN")
+        if checar_disponibilidade_fraldas("P")  < LIMITES_FRALDAS["P"]:  opcoes.append("P")
+        if not opcoes: opcoes.append("PIX Solidário (R$ 50)")
     elif "Homem" in sexo:
-        if checar_disponibilidade_fraldas("M") < LIMITES_FRALDAS["M"]:
-            opcoes.append("M")
-        if checar_disponibilidade_fraldas("G") < LIMITES_FRALDAS["G"]:
-            opcoes.append("G")
-        if not opcoes:
-            opcoes.append("PIX Solidário (R$ 50)")
+        if checar_disponibilidade_fraldas("M") < LIMITES_FRALDAS["M"]: opcoes.append("M")
+        if checar_disponibilidade_fraldas("G") < LIMITES_FRALDAS["G"]: opcoes.append("G")
+        if not opcoes: opcoes.append("PIX Solidário (R$ 50)")
     return opcoes
 
-
-def exibir_bloco_presente(nome_referencia, sexo, sufixo_key):
+def exibir_bloco_fralda(label, sexo, key):
     opcoes = gerar_opcoes_fralda(sexo)
-    fralda_escolhida = st.radio(
-        f"Opção de Fralda para {nome_referencia}:", opcoes,
-        horizontal=True, key=f"fralda_{sufixo_key}"
-    )
-    formato, valor_pix = "Física", 0.0
-
-    if fralda_escolhida == "PIX Solidário (R$ 50)":
-        formato, valor_pix = "PIX", 50.00
-        st.success("Cotas de fraldas atingidas! Você foi direcionado para o PIX Solidário.")
-    elif fralda_escolhida:
-        formato = st.radio(
-            "Como prefere entregar esta fralda?",
-            ["Levarei a fralda física", "Prefiro enviar o valor via PIX"],
-            key=f"formato_{sufixo_key}"
-        )
+    fralda = st.radio(f"Tamanho de fralda — {label}", opcoes, horizontal=True, key=f"fralda_{key}")
+    formato, valor = "Física", 0.0
+    if fralda == "PIX Solidário (R$ 50)":
+        formato, valor = "PIX", 50.00
+        st.markdown('<div class="info-box">💡 Todas as cotas de fralda já foram preenchidas. Você foi direcionado para o <strong>PIX Solidário</strong>.</div>', unsafe_allow_html=True)
+    elif fralda:
+        formato = st.radio("Como você vai entregar?",
+                           ["🎁  Levarei a fralda física no dia", "📱  Prefiro enviar o valor via PIX"],
+                           key=f"formato_{key}")
         if "PIX" in formato:
-            formato, valor_pix = "PIX", VALORES_PIX[fralda_escolhida]
-            st.info(f"Valor sugerido para o pacote **{fralda_escolhida}**: R$ {valor_pix:.2f}")
-
-    return fralda_escolhida, formato, valor_pix
+            formato, valor = "PIX", VALORES_PIX[fralda]
+            st.markdown(f'<div class="info-box">💳 Valor sugerido para o pacote <strong>{fralda}</strong>: <strong>R$ {valor:.2f}</strong></div>', unsafe_allow_html=True)
+    return fralda, formato, valor
 
 # ============================================================
 # 8. MAIN
 # ============================================================
 def main():
-    st.markdown("<h2 style='text-align:center;color:#5a5a5a;'>🍼 Confirmação e Lista de Presentes</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center;color:#d6336c;font-size:22px;font-weight:bold;'>🍯 Prepare os potes de mel porque o Chá de Bebê do Bernardo está chegando! 🍯</p>", unsafe_allow_html=True)
 
-    # ── ETAPA 1: RSVP ────────────────────────────────────────
-    st.markdown("<div class='secao-titulo'>1. Confirmação de Presença e Fraldas</div>", unsafe_allow_html=True)
+    # ── HERO ─────────────────────────────────────────────────
+    st.markdown("""
+    <div class="hero">
+        <div class="hero-badge">✨ Você está convidado</div>
+        <h1>Chá de Bebê do Bernardo</h1>
+        <p class="hero-sub">Confirme sua presença e escolha um presentinho especial 🍯</p>
+        <div class="hero-data">
+            <div class="hero-data-item">
+                <div class="label">📅 Data</div>
+                <div class="value">A confirmar</div>
+            </div>
+            <div class="hero-data-item">
+                <div class="label">📍 Local</div>
+                <div class="value">Cotia · SP</div>
+            </div>
+            <div class="hero-data-item">
+                <div class="label">🍼 Bebê</div>
+                <div class="value">Bernardo</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    c1, c2 = st.columns(2)
-    with c1: nome_titular  = st.text_input("Seu Nome Completo:")
-    with c2: sexo_titular  = st.selectbox("Seu Sexo:", ["Selecione...", "Mulher 🚺", "Homem 🚹"])
+    # ── ETAPAS ───────────────────────────────────────────────
+    st.markdown("""
+    <div class="steps-bar">
+        <div class="step">
+            <div class="step-num active">1</div>
+            <div class="step-label active">Seus dados</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-label">Fraldas</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-label">Mimos</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-label">Confirmar</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── SEÇÃO 1: DADOS PESSOAIS ──────────────────────────────
+    st.markdown("""
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-icon">👤</div>
+            <div>
+                <p class="section-title">Seus dados</p>
+                <p class="section-subtitle">Conte-nos um pouquinho sobre você</p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with st.container():
+        c1, c2 = st.columns([2, 1])
+        with c1: nome_titular = st.text_input("Nome completo", placeholder="Ex: Maria Silva")
+        with c2: sexo_titular = st.selectbox("Sexo", ["Selecione...", "Mulher 🚺", "Homem 🚹"])
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    leva_acomp = st.radio("Vai levar acompanhante adulto?", ["Não", "Sim"], horizontal=True)
+
+    nome_acomp, sexo_acomp, fralda_a, formato_a, valor_a = "", "Selecione...", None, "-", 0.0
+
+    if leva_acomp == "Sim":
+        st.markdown("<hr>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class="section-header" style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f5e6ee;">
+            <div class="section-icon">👫</div>
+            <div>
+                <p class="section-title" style="font-size:18px;">Dados do acompanhante</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        ca1, ca2 = st.columns([2, 1])
+        with ca1: nome_acomp = st.text_input("Nome do acompanhante", placeholder="Ex: João Silva")
+        with ca2: sexo_acomp = st.selectbox("Sexo do acompanhante", ["Selecione...", "Mulher 🚺", "Homem 🚹"], key="sexo_a")
+
+    qtd_filhos = st.number_input("Crianças que vão junto (filhos, sobrinhos…)", min_value=0, max_value=10, value=0)
+    mensagem   = st.text_area("Mensagem para o Bernardo 💌 (opcional)", placeholder="Escreva com carinho…", height=100)
+
+    # ── SEÇÃO 2: FRALDAS ─────────────────────────────────────
+    st.markdown("""
+    <div class="section-card" style="margin-top:24px;">
+        <div class="section-header">
+            <div class="section-icon">🍼</div>
+            <div>
+                <p class="section-title">Presente de fraldas</p>
+                <p class="section-subtitle">Cada convidado traz um pacotinho — ajuda muito!</p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     fralda_t, formato_t, valor_t = None, "-", 0.0
     if sexo_titular != "Selecione...":
-        fralda_t, formato_t, valor_t = exibir_bloco_presente("você", sexo_titular, "t")
+        st.markdown(f"**Fralda de {nome_titular or 'você'}**")
+        fralda_t, formato_t, valor_t = exibir_bloco_fralda(nome_titular or "você", sexo_titular, "t")
+    else:
+        st.markdown('<div class="info-box">ℹ️ Selecione seu sexo acima para ver as opções de fralda.</div>', unsafe_allow_html=True)
 
-    st.markdown("---")
-    leva_acompanhante = st.radio(
-        "Você levará um acompanhante adulto? (Ex: Esposa, Marido)",
-        ["Não", "Sim"], horizontal=True
-    )
-    nome_acomp, sexo_acomp, fralda_a, formato_a, valor_a = "", "Selecione...", None, "-", 0.0
+    if leva_acomp == "Sim" and sexo_acomp != "Selecione...":
+        st.markdown("<hr>", unsafe_allow_html=True)
+        st.markdown(f"**Fralda do acompanhante ({nome_acomp or 'acompanhante'})**")
+        fralda_a, formato_a, valor_a = exibir_bloco_fralda(nome_acomp or "acompanhante", sexo_acomp, "a")
 
-    if leva_acompanhante == "Sim":
-        st.markdown("#### Dados do Acompanhante")
-        ca1, ca2 = st.columns(2)
-        with ca1: nome_acomp = st.text_input("Nome do Acompanhante:")
-        with ca2: sexo_acomp = st.selectbox("Sexo do Acompanhante:", ["Selecione...", "Mulher 🚺", "Homem 🚹"], key="sexo_a")
-        if sexo_acomp != "Selecione...":
-            st.markdown("#### Presente do Acompanhante 🎁 (Fraldas)")
-            fralda_a, formato_a, valor_a = exibir_bloco_presente("o acompanhante", sexo_acomp, "a")
-        else:
-            fralda_a, formato_a, valor_a = None, "-", 0.0
+    # ── SEÇÃO 3: MIMOS ───────────────────────────────────────
+    st.markdown("""
+    <div class="section-card" style="margin-top:24px;">
+        <div class="section-header">
+            <div class="section-icon">🎁</div>
+            <div>
+                <p class="section-title">Mimo extra</p>
+                <p class="section-subtitle">Surpresas que o Bernardo vai adorar — completamente opcional</p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    qtd_filhos = st.number_input("Quantidade de crianças que irão com vocês:", min_value=0, max_value=10, value=0, step=1)
-    mensagem   = st.text_area("Deixe uma mensagem para o Bernardo (Opcional):")
-
-    # ── ETAPA 2: MIMOS ───────────────────────────────────────
-    st.markdown("<div class='secao-titulo'>2. Mimo Extra para o Bernardo</div>", unsafe_allow_html=True)
-    st.info("Além das fraldinhas, preparamos uma vitrine com sugestões de coisinhas que o Bernardo vai precisar.")
-
-    quer_mimo = st.radio(
-        "**Deseja adicionar um mimo extra ao seu presente?**",
-        ["Não, vou presentear apenas com as fraldas.", "Sim, quero escolher um mimo!"],
-        index=0
-    )
+    quer_mimo = st.radio("Deseja presentear com um mimo além das fraldas?",
+                         ["Não, apenas as fraldas 🙂", "Sim, quero escolher um mimo! 🎁"], index=0)
 
     mimo_escolhido = None
     formato_mimo   = "-"
     valor_mimo     = 0.0
 
-    if quer_mimo == "Sim, quero escolher um mimo!":
-        st.markdown("#### 🛍️ Vitrine de Mimos")
+    if "Sim" in quer_mimo:
+        # Filtro por categoria
+        categorias = ["Todas"] + sorted(set(m["categoria"] for m in CATALOGO_MIMOS))
+        col_f, _ = st.columns([1, 3])
+        with col_f:
+            cat_filtro = st.selectbox("Filtrar por categoria", categorias)
 
-        with st.expander("👀 Clique aqui para ver as fotos dos mimos disponíveis", expanded=True):
-            colunas = st.columns(4)
-            for idx, item in enumerate(CATALOGO_MIMOS):
-                with colunas[idx % 4]:
-                    card_html = f"""
-                    <div class="vitrine-card">
-                        <div class="vitrine-img-container"><img src="{item['img']}"></div>
-                        <h4 class="vitrine-titulo">{item['nome']}</h4>
-                        <p class="vitrine-preco">R$ {item['valor']:.2f}</p>
-                        <div class="preco-botoes">
-                            <a class="preco-btn btn-buscape" href="{item['link_buscape']}"      target="_blank">🔍 Buscapé</a>
-                            <a class="preco-btn btn-google"  href="{item['link_google']}"       target="_blank">🛒 Google</a>
-                            <a class="preco-btn btn-ml"      href="{item['link_mercadolivre']}" target="_blank">🛍 Mercado Livre</a>
+        lista_filtrada = CATALOGO_MIMOS if cat_filtro == "Todas" else [m for m in CATALOGO_MIMOS if m["categoria"] == cat_filtro]
+
+        # Grid de cards
+        cols = st.columns(4)
+        for idx, item in enumerate(lista_filtrada):
+            with cols[idx % 4]:
+                st.markdown(f"""
+                <div class="mimo-card">
+                    <img class="mimo-card-img" src="{item['img']}">
+                    <div class="mimo-card-body">
+                        <div class="mimo-card-cat">{item['icone']} {item['categoria']}</div>
+                        <p class="mimo-card-name">{item['nome']}</p>
+                        <p class="mimo-card-desc">{item['desc']}</p>
+                        <p class="mimo-card-price">R$ {item['valor']:.2f}</p>
+                        <div class="mimo-card-btns">
+                            <a class="mimo-btn mimo-btn-b" href="{item['link_buscape']}"      target="_blank">🔍 Buscapé</a>
+                            <a class="mimo-btn mimo-btn-g" href="{item['link_google']}"       target="_blank">🛒 Google</a>
+                            <a class="mimo-btn mimo-btn-m" href="{item['link_mercadolivre']}" target="_blank">🛍 ML</a>
                         </div>
                     </div>
-                    """
-                    st.markdown(card_html, unsafe_allow_html=True)
+                </div>
+                """, unsafe_allow_html=True)
 
-        st.markdown("---")
-        nomes_mimos    = [m["nome"] for m in CATALOGO_MIMOS]
-        mimo_selecionado = st.selectbox("**Qual mimo você escolheu da vitrine acima?**", ["Selecione um mimo..."] + nomes_mimos)
+        st.markdown("<br>", unsafe_allow_html=True)
+        nomes = [m["nome"] for m in CATALOGO_MIMOS]
+        escolha = st.selectbox("Qual mimo você escolheu?", ["— Selecione —"] + nomes)
 
-        if mimo_selecionado != "Selecione um mimo...":
-            info_mimo = next(m for m in CATALOGO_MIMOS if m["nome"] == mimo_selecionado)
-            st.success(f"Ótima escolha! **{info_mimo['nome']}** - R$ {info_mimo['valor']:.2f}")
-            st.markdown(
-                f"🔎 **Compare preços antes de comprar:**  \n"
-                f"[🔴 Buscapé]({info_mimo['link_buscape']}) &nbsp;|&nbsp; "
-                f"[🔵 Google Shopping]({info_mimo['link_google']}) &nbsp;|&nbsp; "
-                f"[🟡 Mercado Livre]({info_mimo['link_mercadolivre']})"
-            )
+        if escolha != "— Selecione —":
+            info = next(m for m in CATALOGO_MIMOS if m["nome"] == escolha)
+            st.markdown(f'<div class="success-box">✅ <strong>{info["nome"]}</strong> — R$ {info["valor"]:.2f}<br><small>Compare antes de comprar: <a href="{info["link_buscape"]}" target="_blank">Buscapé</a> · <a href="{info["link_google"]}" target="_blank">Google Shopping</a> · <a href="{info["link_mercadolivre"]}" target="_blank">Mercado Livre</a></small></div>', unsafe_allow_html=True)
 
-            fisicos_comprados  = checar_fisicos_comprados(info_mimo["nome"])
-            opcoes_entrega_m   = ["Enviar valor via PIX (Recomendado)"]
-            if fisicos_comprados < info_mimo["limite_fisico"]:
-                opcoes_entrega_m.insert(0, "Levarei o produto físico no chá")
+            fisicos = checar_fisicos_comprados(info["nome"])
+            opcoes_entrega = ["📱  Enviar valor via PIX (Recomendado)"]
+            if fisicos < info["limite_fisico"]:
+                opcoes_entrega.insert(0, "🎁  Levarei o produto físico no chá")
             else:
-                st.warning("Já recebemos a cota física deste item! Disponível apenas via envio do PIX.")
+                st.markdown('<div class="warn-box">⚠️ A cota de entrega física deste item já foi preenchida. Apenas PIX disponível.</div>', unsafe_allow_html=True)
 
-            formato_mimo_radio = st.radio("Como você entregará este mimo?", opcoes_entrega_m)
-            mimo_escolhido     = info_mimo
-
-            if "PIX" in formato_mimo_radio:
-                formato_mimo = "PIX"
-                valor_mimo   = info_mimo["valor"]
+            entrega_mimo = st.radio("Como vai entregar o mimo?", opcoes_entrega)
+            mimo_escolhido = info
+            if "PIX" in entrega_mimo:
+                formato_mimo, valor_mimo = "PIX", info["valor"]
             else:
-                formato_mimo = "Física"
-                valor_mimo   = 0.0
+                formato_mimo, valor_mimo = "Física", 0.0
 
-    # ── ETAPA 3: FINALIZAR ───────────────────────────────────
-    st.markdown("<div class='secao-titulo'>3. Finalizar Confirmação</div>", unsafe_allow_html=True)
+    # ── SEÇÃO 4: CONFIRMAR ───────────────────────────────────
+    st.markdown("""
+    <div class="section-card" style="margin-top:24px;">
+        <div class="section-header">
+            <div class="section-icon">🚀</div>
+            <div>
+                <p class="section-title">Confirmar presença</p>
+                <p class="section-subtitle">Revise e finalize — mal podemos esperar para te ver!</p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    if st.button("Confirmar Tudo e Gerar Resumo 🚀"):
+    if st.button("✨  Confirmar Presença e Gerar PIX"):
         if not nome_titular or sexo_titular == "Selecione...":
-            st.error("Por favor, preencha o seu nome e sexo no topo da página.")
-        elif quer_mimo == "Sim, quero escolher um mimo!" and not mimo_escolhido:
-            st.error("Você marcou que deseja dar um mimo. Por favor, selecione-o na lista acima.")
+            st.markdown('<div class="warn-box">⚠️ Por favor, preencha seu nome e sexo antes de confirmar.</div>', unsafe_allow_html=True)
+        elif "Sim" in quer_mimo and not mimo_escolhido:
+            st.markdown('<div class="warn-box">⚠️ Você marcou que deseja dar um mimo. Selecione-o na lista acima.</div>', unsafe_allow_html=True)
         else:
             dados_rsvp = {
                 "Nome Titular":                       nome_titular.strip(),
@@ -401,51 +718,67 @@ def main():
                 "Fralda Titular":                     fralda_t,
                 "Formato Fralda Titular":             formato_t,
                 "Valor PIX Fralda Titular (R$)":      valor_t,
-                "Leva Acompanhante":                  leva_acompanhante,
-                "Nome Acompanhante":                  nome_acomp.strip() if leva_acompanhante == "Sim" else "-",
-                "Sexo Acompanhante":                  sexo_acomp        if leva_acompanhante == "Sim" else "-",
-                "Fralda Acompanhante":                fralda_a          if leva_acompanhante == "Sim" else "-",
-                "Formato Fralda Acompanhante":        formato_a         if leva_acompanhante == "Sim" else "-",
-                "Valor PIX Fralda Acompanhante (R$)": valor_a           if leva_acompanhante == "Sim" else 0.0,
+                "Leva Acompanhante":                  leva_acomp,
+                "Nome Acompanhante":                  nome_acomp.strip() if leva_acomp == "Sim" else "-",
+                "Sexo Acompanhante":                  sexo_acomp         if leva_acomp == "Sim" else "-",
+                "Fralda Acompanhante":                fralda_a           if leva_acomp == "Sim" else "-",
+                "Formato Fralda Acompanhante":        formato_a          if leva_acomp == "Sim" else "-",
+                "Valor PIX Fralda Acompanhante (R$)": valor_a            if leva_acomp == "Sim" else 0.0,
                 "Qtd Crianças":                       int(qtd_filhos),
                 "Mensagem":                           mensagem,
             }
 
-            with st.spinner("Salvando sua confirmação..."):
+            with st.spinner("Confirmando presença..."):
                 salvar_tudo_supabase(dados_rsvp, mimo_escolhido, formato_mimo, valor_mimo)
-                # Limpa cache de contagens para refletir o novo registro imediatamente
                 checar_disponibilidade_fraldas.clear()
                 checar_fisicos_comprados.clear()
 
             total_pix = valor_t + valor_a + (valor_mimo if formato_mimo == "PIX" else 0.0)
 
             st.balloons()
-            st.success(f"Presença confirmada com sucesso! Muito obrigado, {nome_titular}. ❤️")
+            st.markdown(f'<div class="success-box" style="font-size:16px;">🎉 <strong>Presença confirmada!</strong> Muito obrigado, {nome_titular}. O Bernardo já está ansioso para te ver! ❤️</div>', unsafe_allow_html=True)
 
-            st.markdown("### 📋 Seu Resumo:")
-            st.write(f"- Fralda ({nome_titular}): {fralda_t} — {formato_t} (R$ {valor_t:.2f})")
-            if leva_acompanhante == "Sim":
-                st.write(f"- Fralda (Acompanhante): {fralda_a} — {formato_a} (R$ {valor_a:.2f})")
-            if mimo_escolhido:
-                st.write(f"- Mimo Extra: {mimo_escolhido['nome']} — {formato_mimo} (R$ {valor_mimo:.2f})")
-            st.markdown(f"**TOTAL A PAGAR NO PIX: R$ {total_pix:.2f}**")
+            # Resumo
+            st.markdown('<div class="resumo-card">', unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class="resumo-card">
+                <div style="font-family:'Playfair Display',serif;font-size:20px;color:#2d2d2d;margin-bottom:16px;">📋 Seu Resumo</div>
+                <div class="resumo-linha">
+                    <span>🍼 Fralda ({nome_titular})</span>
+                    <span><strong>{fralda_t}</strong> · {formato_t} · R$ {valor_t:.2f}</span>
+                </div>
+                {"" if leva_acomp != "Sim" else f'<div class="resumo-linha"><span>🍼 Fralda ({nome_acomp or "Acompanhante"})</span><span><strong>{fralda_a}</strong> · {formato_a} · R$ {valor_a:.2f}</span></div>'}
+                {"" if not mimo_escolhido else f'<div class="resumo-linha"><span>🎁 Mimo · {mimo_escolhido["nome"]}</span><span>{formato_mimo} · R$ {valor_mimo:.2f}</span></div>'}
+                <div class="resumo-total">
+                    <span>Total a pagar via PIX</span>
+                    <span>R$ {total_pix:.2f}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
+            # PIX
             if total_pix > 0:
-                st.markdown("---")
-                st.markdown("### 📱 Realizar Pagamento (PIX)")
-                st.info("Abra o aplicativo do seu banco, escolha 'PIX QR Code' e aponte a câmera para a imagem abaixo, ou use o Copia e Cola.")
                 payload_pix = gerar_payload_pix(CHAVE_PIX, total_pix)
-                qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={urllib.parse.quote(payload_pix)}"
-                col_qr, col_txt = st.columns([1, 2])
-                with col_qr:
-                    st.image(qr_url)
-                with col_txt:
-                    st.write("**Opção 1: PIX Copia e Cola**")
+                qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=260x260&data={urllib.parse.quote(payload_pix)}"
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown('<div class="pix-card">', unsafe_allow_html=True)
+                p1, p2 = st.columns([1, 2])
+                with p1:
+                    st.image(qr_url, width=220)
+                with p2:
+                    st.markdown(f"""
+                    <div style="text-align:left;padding:16px 0;">
+                        <p style="font-family:'Playfair Display',serif;font-size:22px;color:#2d2d2d;margin:0 0 6px 0;">📱 Pague via PIX</p>
+                        <p style="color:#888;font-size:14px;margin:0 0 20px 0;">Abra o app do seu banco → PIX → Pagar com QR Code</p>
+                        <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#1a73e8;margin-bottom:6px;">Chave celular</p>
+                        <code style="background:#eaf3ff;border:1px solid #b8d4f5;border-radius:8px;padding:10px 16px;font-size:15px;font-weight:700;color:#0d3d7a;display:block;margin-bottom:20px;">{CHAVE_PIX}</code>
+                        <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#1a73e8;margin-bottom:6px;">PIX Copia e Cola</p>
+                    </div>
+                    """, unsafe_allow_html=True)
                     st.code(payload_pix, language="text")
-                    st.write("**Opção 2: Chave Celular Direta**")
-                    st.code(CHAVE_PIX, language="text")
+                st.markdown('</div>', unsafe_allow_html=True)
             else:
-                st.success("Tudo certo! Te esperamos na festa com os presentes físicos.")
+                st.markdown('<div class="success-box">🎁 Tudo certo! Te esperamos no chá com os presentes físicos. 🥳</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
