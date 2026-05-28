@@ -517,7 +517,7 @@ def main():
         <div class="hero-data">
             <div class="hero-data-item">
                 <div class="label">📅 Data</div>
-                <div class="value">A confirmar</div>
+                <div class="value">18/07/2026</div>
             </div>
             <div class="hero-data-item">
                 <div class="label">📍 Local</div>
