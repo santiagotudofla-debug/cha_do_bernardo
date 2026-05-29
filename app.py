@@ -127,20 +127,72 @@ div.stAlert { background-color: rgba(255,255,255,0.9); border-radius: 10px; bord
 
 /* Títulos das seções em PRETO e EXTRA NEGRITO (900) */
 .secao-titulo { color: #000000; margin-top: 30px; margin-bottom: 15px; font-size: 20px; font-weight: 900; border-bottom: 2px solid #000000; padding-bottom: 5px;}
+h4 { color: #333 !important; font-weight: 800 !important; margin-bottom: 10px !important; }
 
-/* ── VITRINE CARDS ── */
-.vitrine-card { background-color: #ffffff; border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s ease; margin-bottom: 20px; border: 1px solid #f0f0f0; }
+/* ── VITRINE CARDS (GRID PERFEITO) ── */
+.vitrine-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    padding: 10px 0;
+}
+.vitrine-card { 
+    background-color: #ffffff; 
+    border-radius: 15px; 
+    padding: 15px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+    transition: transform 0.3s ease; 
+    border: 1px solid #f0f0f0; 
+    display: flex; 
+    flex-direction: column; 
+    height: 100%;
+}
 .vitrine-card:hover { transform: translateY(-6px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-.vitrine-img-container { position: relative; border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
-.vitrine-img-container img { width: 100%; height: auto; display: block; }
-.vitrine-titulo { font-size: 15px; font-weight: 700; color: #444; margin: 0 0 5px 0; line-height: 1.2; }
-
-/* Preços dos itens na vitrine em PRETO e EXTRA NEGRITO (900) */
-.vitrine-preco { font-size: 16px; font-weight: 900; color: #000000; margin: 4px 0; }
-
-.preco-botoes { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
-.preco-btn { display: inline-block; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; text-decoration: none !important; color: white !important; }
-.btn-ml       { background: #FFE600; color: #333 !important; }
+.vitrine-img-container { 
+    position: relative; 
+    border-radius: 10px; 
+    overflow: hidden; 
+    margin-bottom: 12px; 
+    aspect-ratio: 4/3; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fdf0f3;
+}
+.vitrine-img-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vitrine-titulo { 
+    font-size: 15px; 
+    font-weight: 700; 
+    color: #444; 
+    margin: 0 0 10px 0; 
+    line-height: 1.3; 
+    flex-grow: 1; /* O segredo do alinhamento: empurra o preço e o botão pra baixo */
+}
+.vitrine-preco { 
+    font-size: 16px; 
+    font-weight: 900; 
+    color: #000000; 
+    margin: 0 0 12px 0; 
+}
+.preco-botoes { 
+    display: flex; 
+    width: 100%; 
+    margin-top: auto; 
+}
+.preco-btn { 
+    display: inline-block; 
+    width: 100%; 
+    text-align: center; 
+    padding: 10px 12px; 
+    border-radius: 8px; 
+    font-size: 12px; 
+    font-weight: 700; 
+    text-decoration: none !important; 
+    color: #333 !important; 
+    transition: filter 0.2s ease;
+}
+.preco-btn:hover { filter: brightness(0.95); }
+.btn-ml { background: #FFE600; border: 1px solid #e6ce00;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -153,6 +205,7 @@ CHAVE_PIX = "11963766575"
 
 @st.cache_data
 def gerar_catalogo_50_mimos():
+    # Agora com 32 itens para fechar a última linha da grid com 4 cartões certinhos!
     dados_brutos = [
         ("Lenços Umedecidos (Leve 4)", "Higiene", 39.90, "Shopee", "Kit de lenços..."),
         ("Pomada Antiassaduras", "Higiene", 25.50, "Natura", "Proteção prolongada..."),
@@ -182,7 +235,11 @@ def gerar_catalogo_50_mimos():
         ("Mochila Maternidade", "Organização", 250.00, "Amazon", "Bolso térmico..."),
         ("Kit Cabides Infantis", "Organização", 35.00, "Shopee", "Tamanho ideal..."),
         ("Quadro Porta-Maternidade", "Personalizados", 120.00, "Elo7", "Bordado à mão..."),
-        ("Álbum do Bebê (1º Ano)", "Personalizados", 89.90, "Amazon", "Para preencher...")
+        ("Álbum do Bebê (1º Ano)", "Personalizados", 89.90, "Amazon", "Para preencher..."),
+        # Os 3 novos itens adicionados para preencher os buracos do Grid:
+        ("Aspirador Nasal", "Higiene", 45.90, "Amazon", "Ajuda a desobstruir o narizinho com segurança."),
+        ("Babá Eletrônica", "Organização", 199.90, "Mercado Livre", "Monitoramento com áudio para tranquilidade."),
+        ("Almofada Amamentação", "Alimentação", 89.90, "Shopee", "Conforto para a mãe e o bebê na hora de mamar.")
     ]
     catalogo = []
     for i, (nome, cat, valor, loja, desc) in enumerate(dados_brutos, 1):
@@ -339,6 +396,7 @@ def main():
 
     fralda_t, formato_t, valor_t = None, "-", 0.0
     if sexo_titular != "Selecione...":
+        st.markdown("#### Seu Presente 🎁 (Fraldas)")
         fralda_t, formato_t, valor_t = exibir_bloco_presente("você", sexo_titular, "t")
 
     st.markdown("---")
@@ -363,7 +421,6 @@ def main():
     st.markdown("<div class='section-card'>", unsafe_allow_html=True)
     st.markdown("<div class='secao-titulo'>2. Mimo Extra para o Bernardo</div>", unsafe_allow_html=True)
     
-    # === AQUI ESTÁ A FRASE COM A PARTE EM NEGRITO DESTACADA ===
     st.info("Além das fraldinhas, preparamos uma **vitrine com algumas sugestões de coisinhas que o Bernardo vai precisar**.")
     
     quer_mimo = st.radio("**Deseja adicionar um mimo extra ao seu presente?**", ["Não, vou presentear apenas com as fraldas.", "Sim, quero escolher um mimo!"], index=0)
@@ -375,20 +432,19 @@ def main():
     if quer_mimo == "Sim, quero escolher um mimo!":
         st.markdown("#### 🛍️ Vitrine de Mimos")
         with st.expander("👀 Clique aqui para ver as fotos dos mimos disponíveis", expanded=True):
-            colunas = st.columns(4)
-            for idx, item in enumerate(CATALOGO_MIMOS):
-                with colunas[idx % 4]:
-                    card_html = f"""
-                    <div class="vitrine-card">
-                        <div class="vitrine-img-container"><img src="{item['img']}"></div>
-                        <h4 class="vitrine-titulo">{item['nome']}</h4>
-                        <p class="vitrine-preco">R$ {item['valor']:.2f}</p>
-                        <div class="preco-botoes">
-                            <a class="preco-btn btn-ml" href="{item['link_mercadolivre']}" target="_blank">🛍 Mercado Livre</a>
-                        </div>
-                    </div>
-                    """
-                    st.markdown(card_html, unsafe_allow_html=True)
+            
+            grid_html = '<div class="vitrine-grid">'
+            for item in CATALOGO_MIMOS:
+                grid_html += '<div class="vitrine-card">'
+                grid_html += f'<div class="vitrine-img-container"><img src="{item["img"]}"></div>'
+                grid_html += f'<h4 class="vitrine-titulo">{item["nome"]}</h4>'
+                grid_html += f'<p class="vitrine-preco">R$ {item["valor"]:.2f}</p>'
+                grid_html += '<div class="preco-botoes">'
+                grid_html += f'<a class="preco-btn btn-ml" href="{item["link_mercadolivre"]}" target="_blank">🛍 Mercado Livre</a>'
+                grid_html += '</div></div>'
+            grid_html += '</div>'
+            
+            st.markdown(grid_html, unsafe_allow_html=True)
 
         st.markdown("---")
         nomes_mimos = [m["nome"] for m in CATALOGO_MIMOS]
