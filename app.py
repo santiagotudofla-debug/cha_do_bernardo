@@ -199,8 +199,8 @@ h4 { color: #333 !important; font-weight: 800 !important; margin-bottom: 10px !i
 # ============================================================
 # 3. REGRAS DE NEGÓCIO E CATÁLOGO
 # ============================================================
-LIMITES_FRALDAS = {"RN": 20, "P": 40, "M": 40, "G": 30}
-VALORES_PIX = {"RN": 40.00, "P": 45.00, "M": 50.00, "G": 60.00, "PIX Solidário (R$ 50)": 50.00}
+LIMITES_FRALDAS = {"RN": 6, "P": 10, "M": 50, "G": 30}
+VALORES_PIX = {"RN": 40.00, "P": 45.00, "M": 50.00, "G": 55.00, "PIX Solidário (R$ 50)": 50.00}
 CHAVE_PIX = "11963766575"
 
 @st.cache_data
