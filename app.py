@@ -38,10 +38,10 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     100% { background-position: 0% 50%; }
 }
 
-/* ── BARRA DE ETAPAS (NOVO DESIGN) ── */
+/* ── BARRA DE ETAPAS (NOVO DESIGN IDENTICO À IMAGEM) ── */
 .steps-container {
     position: fixed; top: 0; left: 0; width: 100%;
-    background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.85) 100%);
+    background: linear-gradient(180deg, #eaf2f8 0%, rgba(255,255,255,0.95) 100%);
     backdrop-filter: blur(8px); z-index: 9999;
     padding: 18px 0; border-bottom: 1px solid rgba(26,115,232,0.1);
     box-shadow: 0 4px 20px rgba(0,0,0,0.03);
@@ -52,23 +52,29 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 }
 .step { display: flex; align-items: center; gap: 12px; }
 
+/* Círculos inativos (Cinza Claro) */
 .step-num { 
     width: 42px; height: 42px; border-radius: 50%; 
     background: #f0f2f5; color: #8892a0; font-weight: 800; font-size: 16px; 
     display: flex; align-items: center; justify-content: center; 
 }
+/* Círculo Ativo (Azul) */
 .step-num.active { 
     background: #1565c0; color: white; 
     box-shadow: 0 4px 12px rgba(21,101,192,0.3);
 }
 
+/* Textos inativos */
 .step-label { font-size: 15px; font-weight: 600; color: #aab4c3; }
+/* Texto Ativo */
 .step-label.active { color: #1565c0; font-weight: 800; }
 
+/* Linhas conectoras */
 .step-line { 
     width: 70px; height: 4px; background: #f0f2f5; 
     margin: 0 4px; border-radius: 2px;
 }
+/* Linha Gradiente (Azul para Dourado) */
 .step-line.done { 
     background: linear-gradient(90deg, #1565c0 0%, #d4af37 100%); 
 }
@@ -129,7 +135,7 @@ div.stAlert { background-color: rgba(255,255,255,0.9); border-radius: 10px; bord
 .secao-titulo { color: #000000; margin-top: 30px; margin-bottom: 15px; font-size: 20px; font-weight: 900; border-bottom: 2px solid #000000; padding-bottom: 5px;}
 h4 { color: #333 !important; font-weight: 800 !important; margin-bottom: 10px !important; }
 
-/* ── VITRINE CARDS (GRID PERFEITO) ── */
+/* ── VITRINE CARDS (GRID PERFEITO E ALINHADO) ── */
 .vitrine-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -168,6 +174,8 @@ h4 { color: #333 !important; font-weight: 800 !important; margin-bottom: 10px !i
     line-height: 1.3; 
     flex-grow: 1; /* O segredo do alinhamento: empurra o preço e o botão pra baixo */
 }
+
+/* Preços dos itens na vitrine em PRETO e EXTRA NEGRITO (900) */
 .vitrine-preco { 
     font-size: 16px; 
     font-weight: 900; 
@@ -205,7 +213,7 @@ CHAVE_PIX = "11963766575"
 
 @st.cache_data
 def gerar_catalogo_50_mimos():
-    # Agora com 32 itens para fechar a última linha da grid com 4 cartões certinhos!
+    # 32 itens para fechar a última linha da grid com 4 cartões certinhos!
     dados_brutos = [
         ("Lenços Umedecidos (Leve 4)", "Higiene", 39.90, "Shopee", "Kit de lenços..."),
         ("Pomada Antiassaduras", "Higiene", 25.50, "Natura", "Proteção prolongada..."),
@@ -236,7 +244,6 @@ def gerar_catalogo_50_mimos():
         ("Kit Cabides Infantis", "Organização", 35.00, "Shopee", "Tamanho ideal..."),
         ("Quadro Porta-Maternidade", "Personalizados", 120.00, "Elo7", "Bordado à mão..."),
         ("Álbum do Bebê (1º Ano)", "Personalizados", 89.90, "Amazon", "Para preencher..."),
-        # Os 3 novos itens adicionados para preencher os buracos do Grid:
         ("Aspirador Nasal", "Higiene", 45.90, "Amazon", "Ajuda a desobstruir o narizinho com segurança."),
         ("Babá Eletrônica", "Organização", 199.90, "Mercado Livre", "Monitoramento com áudio para tranquilidade."),
         ("Almofada Amamentação", "Alimentação", 89.90, "Shopee", "Conforto para a mãe e o bebê na hora de mamar.")
@@ -276,7 +283,7 @@ def gerar_payload_pix(chave, valor, nome="Cha do Bernardo", cidade="Cotia"):
     return payload
 
 # ============================================================
-# 4. FUNÇÕES DE BANCO DE DADOS (SUPABASE)
+# 4. FUNÇÕES DE BANCO DE DADOS E LÓGICA TRANSBORDAMENTO
 # ============================================================
 @st.cache_data(ttl=30)
 def checar_disponibilidade_fraldas(tamanho):
@@ -311,21 +318,43 @@ def salvar_tudo_supabase(nome_titular, sexo_titular, fralda_t, formato_t, valor_
     }
     get_supabase().table("rsvp").insert(linha).execute()
 
+# AQUI ESTÁ A LÓGICA DE TRANSBORDAMENTO ATUALIZADA
 def gerar_opcoes_fralda(sexo):
     opcoes = []
+    
     if "Mulher" in sexo:
-        if checar_disponibilidade_fraldas("RN") < LIMITES_FRALDAS["RN"]: opcoes.append("RN")
-        if checar_disponibilidade_fraldas("P") < LIMITES_FRALDAS["P"]: opcoes.append("P")
-        if not opcoes: opcoes.append("PIX Solidário (R$ 50)")
+        # Tenta colocar os tamanhos originais (RN e P)
+        if checar_disponibilidade_fraldas("RN") < LIMITES_FRALDAS["RN"]:
+            opcoes.append("RN")
+        else: # Se RN esgotou, abre M como fallback
+            if checar_disponibilidade_fraldas("M") < LIMITES_FRALDAS["M"]:
+                if "M" not in opcoes: opcoes.append("M")
+
+        if checar_disponibilidade_fraldas("P") < LIMITES_FRALDAS["P"]:
+            opcoes.append("P")
+        else: # Se P esgotou, abre G como fallback
+            if checar_disponibilidade_fraldas("G") < LIMITES_FRALDAS["G"]:
+                if "G" not in opcoes: opcoes.append("G")
+
+        # Se depois de toda essa verificação não sobrou nada, libera o PIX.
+        if not opcoes: 
+            opcoes.append("PIX Solidário (R$ 50)")
+
     elif "Homem" in sexo:
-        if checar_disponibilidade_fraldas("M") < LIMITES_FRALDAS["M"]: opcoes.append("M")
-        if checar_disponibilidade_fraldas("G") < LIMITES_FRALDAS["G"]: opcoes.append("G")
-        if not opcoes: opcoes.append("PIX Solidário (R$ 50)")
+        if checar_disponibilidade_fraldas("M") < LIMITES_FRALDAS["M"]: 
+            opcoes.append("M")
+        if checar_disponibilidade_fraldas("G") < LIMITES_FRALDAS["G"]: 
+            opcoes.append("G")
+        
+        # Se M e G acabaram para os homens, também libera o PIX.
+        if not opcoes: 
+            opcoes.append("PIX Solidário (R$ 50)")
+            
     return opcoes
 
 def exibir_bloco_presente(nome_referencia, sexo, sufixo_key):
     opcoes = gerar_opcoes_fralda(sexo)
-    fralda_escolhida = st.radio(f"Opção de Fralda para {nome_referencia}:", opcoes, horizontal=True, key=f"fralda_{sufixo_key}")
+    fralda_escolhida = st.radio(f"Escolha o tamanho da fralda:", opcoes, horizontal=True, key=f"fralda_{sufixo_key}")
     formato, valor_pix = "Física", 0.0
     if fralda_escolhida == "PIX Solidário (R$ 50)":
         formato, valor_pix = "PIX", 50.00
